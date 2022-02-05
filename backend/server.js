@@ -9,7 +9,16 @@ app.get('/api/products', (req, res) => {
 
 app.get('/api/products/slug/:slug', (req, res) => {
   const slug = req.params.slug;
-  const product = data.products.find((p) => p.slug === slug);
+  const product = data.products.find((x) => x.slug === slug);
+  if (product) {
+    res.json(product);
+  } else {
+    res.status(404).json({ message: 'Product not found' });
+  }
+});
+app.get('/api/products/:id', (req, res) => {
+  const id = req.params.id;
+  const product = data.products.find((x) => x._id === id);
   if (product) {
     res.json(product);
   } else {
