@@ -5,12 +5,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-  "server": "nodemon server.js"
+    "server": "nodemon server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.17.2"
+    "dotenv": "^16.0.0",
+    "express": "^4.17.2",
+    "mongoose": "^6.2.0"
   }
 }
