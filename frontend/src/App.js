@@ -1,19 +1,27 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { LinkContainer } from 'react-router-bootstrap';
-import { Badge, Container, Nav, Navbar } from 'react-bootstrap';
+import { Badge, Container, Nav, Navbar, NavDropdown,  } from 'react-bootstrap';
 import HomeScreen from './screens/HomeScreen';
 import ProductScreen from './screens/ProductScreen';
 import { useContext } from 'react';
 import { Store } from './Store';
 import CartScreen from './screens/CartScreen';
 import SigninScreen from './screens/SigninScreen';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
-  const { state } = useContext(Store);
-  const { cart } = state;
+  const { state, dispatch: ctxDispatch } = useContext(Store);
+  const { cart, userInfo } = state;
+
+  const signOutHandler = () => {
+    ctxDispatch({ type: 'USER_SIGNOUT' });
+    localStorage.removeItem('userInfo');
+  };
   return (
     <BrowserRouter>
       <div className="d-flex flex-column site-container">
+        <ToastContainer position='top-center' limit={1} />
         <header>
           <Navbar bg="dark" variant="dark">
             <Container>
@@ -31,6 +39,28 @@ function App() {
                     )}
                   </Nav.Link>
                 </LinkContainer>
+                {userInfo ? (
+                  <NavDropdown title={userInfo.name} id="basic-nav-dropdown">
+                    <LinkContainer to="/profile">
+                      <NavDropdown.Item>Profile</NavDropdown.Item>
+                    </LinkContainer>
+                    <LinkContainer to="/orderhistory">
+                      <NavDropdown.Item>Order History</NavDropdown.Item>
+                    </LinkContainer>
+                    <NavDropdown.Divider />
+                    <NavDropdown.Item
+                      onClick={() => {
+                        signOutHandler();
+                      }}
+                    >
+                      Sign Out
+                    </NavDropdown.Item>
+                  </NavDropdown>
+                ) : (
+                  <LinkContainer to="/signin">
+                    <Nav.Link>Sign In</Nav.Link>
+                  </LinkContainer>
+                )}
               </Nav>
             </Container>
           </Navbar>

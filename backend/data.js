@@ -1,7 +1,22 @@
+import bcrypt from 'bcryptjs';
+
 const data = {
+  users: [
+    {
+      name: 'John',
+      email: 'john@example.com',
+      password: bcrypt.hashSync('123456'),
+      isAdmin: false,
+    },
+    {
+      name: 'Admin',
+      email: 'admin@example.com',
+      password: bcrypt.hashSync('123456'),
+      isAdmin: true,
+    },
+  ],
   products: [
     {
-      _id: '1',
       name: 'Slim Shirt',
       slug: 'slim-shirt',
       category: 'Shirts',
@@ -14,7 +29,6 @@ const data = {
       description: 'A red t-shirt, perfect for days with non-red weather.',
     },
     {
-      _id: '2',
       name: 'Fit Shirt',
       slug: 'fit-shirt',
       category: 'Shirts',
@@ -27,7 +41,6 @@ const data = {
       description: 'A red t-shirt, perfect for days with non-red weather.',
     },
     {
-      _id: '3',
       name: 'Normal Shirt',
       slug: 'normal-shirt',
       category: 'Shirts',
@@ -40,9 +53,8 @@ const data = {
       description: 'A red t-shirt, perfect for days with non-red weather.',
     },
     {
-      _id: '4',
-      name: 'Slim Shirt',
-      slug: 'full shirt',
+      name: 'Slim Shirt2',
+      slug: 'slim shirt2',
       category: 'Shirts',
       image: '/images/p1.jpg',
       price: 160,
@@ -53,9 +65,8 @@ const data = {
       description: 'A red t-shirt, perfect for days with non-red weather.',
     },
     {
-      _id: '5',
       name: 'Slim Shirt1',
-      slug: 'full shirt1',
+      slug: 'slim shirt1',
       category: 'Shirts',
       image: '/images/p2.jpg',
       price: 160,
