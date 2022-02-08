@@ -10,7 +10,7 @@ import {
   Row,
 } from 'react-bootstrap';
 import { Helmet } from 'react-helmet-async';
-import {  useNavigate, useParams } from 'react-router-dom';
+import {  Link, useNavigate, useParams } from 'react-router-dom';
 import LoadingBox from '../components/LoadingBox';
 import MessageBox from '../components/MessageBox';
 
@@ -96,6 +96,8 @@ const ProductScreen = () => {
       ) : error ? (
         <MessageBox variant="danger">{error}</MessageBox>
       ) : (
+        <>
+         <Link className='btn btn-outline-dark mb-3' to="/">Back to Home</Link>
         <Row>
           <Col md={6}>
             <Image
@@ -172,6 +174,7 @@ const ProductScreen = () => {
             </Card>
           </Col>
         </Row>
+        </>
       )}
     </>
   );

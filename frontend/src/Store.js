@@ -1,6 +1,5 @@
 import React, { createContext, useReducer } from 'react';
-
-export const Store = createContext();
+import {createStore} from 'redux';
 
 const initialState = {
   userInfo: localStorage.getItem('userInfo')
@@ -20,7 +19,7 @@ const initialState = {
   },
 };
 
-function reducer(state, action) {
+const reducer = (state, action) => {
   switch (action.type) {
     case 'CART_ADD_ITEM':
       const newItem = action.payload;
@@ -78,7 +77,13 @@ function reducer(state, action) {
     default:
       return state;
   }
-}
+};
+
+export const Store = createContext();
+
+const store = createStore(reducer, initialState);
+
+
 
 export function StoreProvider(props) {
   const { children } = props;
