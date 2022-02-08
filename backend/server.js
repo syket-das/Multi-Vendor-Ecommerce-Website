@@ -1,7 +1,8 @@
 import express from 'express';
-import data from './data.js';
+
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import cors from 'cors';
 import seedRouter from './routes/seedRoutes.js';
 import productRouter from './routes/productRoute.js';
 import userRouter from './routes/userRoutes.js';
@@ -17,6 +18,7 @@ mongoose
   });
 
 const app = express();
+app.use(cors())
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

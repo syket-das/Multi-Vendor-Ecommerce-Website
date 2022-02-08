@@ -39,3 +39,13 @@ main {
 .small-container {
   max-width: 600px;
 }
+
+.checkout-steps > div {
+  border-bottom: 0.2rem solid #a0a0a0;
+  color: #a0a0a0;
+}
+
+.checkout-steps > div.active {
+  border-bottom: #f08000 0.2rem solid;
+  color: #f08000;
+}
