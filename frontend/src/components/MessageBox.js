@@ -1,7 +1,9 @@
 import React from 'react';
-import { Alert } from 'react-bootstrap';
-const MessageBox = ({ variant, children }) => {
-  return <Alert variant={variant || 'info'}>{children}</Alert>;
-};
 
-export default MessageBox;
+export default function MessageBox(props) {
+  return (
+    <div className={`alert alert-${props.variant || 'info'}`}>
+      {props.children}
+    </div>
+  );
+}

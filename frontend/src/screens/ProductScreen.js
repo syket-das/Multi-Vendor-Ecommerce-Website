@@ -1,183 +1,117 @@
-import axios from 'axios';
-import React, { useContext, useEffect, useReducer } from 'react';
-import {
-  Badge,
-  Button,
-  Card,
-  Col,
-  Image,
-  ListGroup,
-  Row,
-} from 'react-bootstrap';
-import { Helmet } from 'react-helmet-async';
-import {  Link, useNavigate, useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
+import { detailsProduct } from '../actions/productActions';
 import LoadingBox from '../components/LoadingBox';
 import MessageBox from '../components/MessageBox';
-
 import Rating from '../components/Rating';
-import { Store } from '../Store';
-import { getError } from '../utils';
 
-const reducer = (state, action) => {
-  switch (action.type) {
-    case 'FETCH_REQUEST':
-      return {
-        ...state,
-        loading: true,
-      };
-
-    case 'FETCH_SUCCESS':
-      return {
-        ...state,
-        loading: false,
-        product: action.payload,
-      };
-
-    case 'FETCH_FAIL':
-      return {
-        ...state,
-        loading: false,
-        error: action.payload,
-      };
-
-    default:
-      return state;
-  }
-};
-
-const ProductScreen = () => {
-  const navigate = useNavigate()
-  const params = useParams();
-  const { slug } = params;
-
-  const [{ loading, error, product }, dispatch] = useReducer(reducer, {
-    product: {},
-    loading: true,
-    error: '',
-  });
+export default function ProductScreen(props) {
+  const dispatch = useDispatch();
+  const productId = props.match.params.id;
+  const [qty, setQty] = useState(1);
+  const productDetails = useSelector((state) => state.productDetails);
+  const { loading, error, product } = productDetails;
 
   useEffect(() => {
-    const fetchData = async () => {
-      dispatch({ type: 'FETCH_REQUEST' });
-      try {
-        const result = await axios.get(`/api/products/slug/${slug}`);
-        dispatch({ type: 'FETCH_SUCCESS', payload: result.data });
-      } catch (error) {
-        dispatch({ type: 'FETCH_FAIL', payload: getError(error) });
-      }
-    };
-    fetchData();
-  }, [slug]);
-
-  const { state, dispatch: ctxDispatch } = useContext(Store);
-  const { cart } = state;
-
-  const addToCartHandler = async () => {
-    const existItem = cart.cartItems.find((x) => x._id === product._id);
-    const quantity = existItem ? existItem.quantity + 1 : 1;
-    const { data } = await axios.get(`/api/products/${product._id}`);
-    if (data.countInStock < quantity) {
-      window.alert('Sorry Product is out of stock');
-      return;
-    }
-    ctxDispatch({
-      type: 'CART_ADD_ITEM',
-      payload: { ...product, quantity },
-    });
-    navigate('/cart');
+    dispatch(detailsProduct(productId));
+  }, [dispatch, productId]);
+  const addToCartHandler = () => {
+    props.history.push(`/cart/${productId}?qty=${qty}`);
   };
-
-
-
   return (
-    <>
+    <div>
       {loading ? (
-        <LoadingBox />
+        <LoadingBox></LoadingBox>
       ) : error ? (
         <MessageBox variant="danger">{error}</MessageBox>
       ) : (
-        <>
-         <Link className='btn btn-outline-dark mb-3' to="/">Back to Home</Link>
-        <Row>
-          <Col md={6}>
-            <Image
-              src={product.image}
-              alt={product.name}
-              className="img-large"
-            />
-          </Col>
-          <Col md={3}>
-            <ListGroup variant="flush">
-              <ListGroup.Item>
-                <Helmet>
-                  <title>{product.name}</title>
-                </Helmet>
-                <h1>{product.name}</h1>
-              </ListGroup.Item>
-              <ListGroup.Item>
-                <Rating
-                  rating={product.rating}
-                  numReviews={product.numReviews}
-                />
-              </ListGroup.Item>
-              <ListGroup.Item>
-                <strong>Price:</strong> {product.price}
-              </ListGroup.Item>
-              <ListGroup.Item>
-                <strong>Description:</strong> {product.description}
-              </ListGroup.Item>
-            </ListGroup>
-          </Col>
-          <Col md={3}>
-            <Card>
-              <Card.Body>
-                <ListGroup variant="flush">
-                  <ListGroup.Item>
-                    <Row>
-                      <Col>Price</Col>
-                      <Col>
-                        {'$'}
-                        {product.price}
-                      </Col>
-                    </Row>
-                  </ListGroup.Item>
-                  <ListGroup.Item>
-                    <Row>
-                      <Col>Status</Col>
-                      <Col>
+        <div>
+          <Link to="/">Back to result</Link>
+          <div className="row top">
+            <div className="col-2">
+              <img
+                className="large"
+                src={product.image}
+                alt={product.name}
+              ></img>
+            </div>
+            <div className="col-1">
+              <ul>
+                <li>
+                  <h1>{product.name}</h1>
+                </li>
+                <li>
+                  <Rating
+                    rating={product.rating}
+                    numReviews={product.numReviews}
+                  ></Rating>
+                </li>
+                <li>Pirce : ${product.price}</li>
+                <li>
+                  Description:
+                  <p>{product.description}</p>
+                </li>
+              </ul>
+            </div>
+            <div className="col-1">
+              <div className="card card-body">
+                <ul>
+                  <li>
+                    <div className="row">
+                      <div>Price</div>
+                      <div className="price">${product.price}</div>
+                    </div>
+                  </li>
+                  <li>
+                    <div className="row">
+                      <div>Status</div>
+                      <div>
                         {product.countInStock > 0 ? (
-                          <Badge bg="success">In Stock</Badge>
+                          <span className="success">In Stock</span>
                         ) : (
-                          <Badge bg="danger">Out of Stock</Badge>
+                          <span className="danger">Unavailable</span>
                         )}
-                      </Col>
-                    </Row>
-                  </ListGroup.Item>
-                  <ListGroup.Item>
-                    <Row>
-                      <Col>
-                        {product.countInStock > 0 && (
-                          <div className="d-grid">
-                            <Button
-                              variant="primary"
-                              onClick={addToCartHandler}
+                      </div>
+                    </div>
+                  </li>
+                  {product.countInStock > 0 && (
+                    <>
+                      <li>
+                        <div className="row">
+                          <div>Qty</div>
+                          <div>
+                            <select
+                              value={qty}
+                              onChange={(e) => setQty(e.target.value)}
                             >
-                              Add to Cart
-                            </Button>
+                              {[...Array(product.countInStock).keys()].map(
+                                (x) => (
+                                  <option key={x + 1} value={x + 1}>
+                                    {x + 1}
+                                  </option>
+                                )
+                              )}
+                            </select>
                           </div>
-                        )}
-                      </Col>
-                    </Row>
-                  </ListGroup.Item>
-                </ListGroup>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-        </>
+                        </div>
+                      </li>
+                      <li>
+                        <button
+                          onClick={addToCartHandler}
+                          className="primary block"
+                        >
+                          Add to Cart
+                        </button>
+                      </li>
+                    </>
+                  )}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
-    </>
+    </div>
   );
-};
-
-export default ProductScreen;
+}

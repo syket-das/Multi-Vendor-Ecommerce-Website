@@ -1,167 +1,142 @@
-import React, { useContext, useEffect } from 'react';
-import {
-  Button,
-  Card,
-  Col,
-  Container,
-  Image,
-  ListGroup,
-  Row,
-} from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
+import { createOrder } from '../actions/orderActions';
 import CheckoutSteps from '../components/CheckoutSteps';
-import { Store } from '../Store';
+import { ORDER_CREATE_RESET } from '../constants/orderConstants';
+import LoadingBox from '../components/LoadingBox';
+import MessageBox from '../components/MessageBox';
 
-const PlaceOrderScreen = () => {
-  const navigate = useNavigate;
-
-  const { state, dispatch: ctxDispatch } = useContext(Store);
-  const { cart, userInfo } = state;
-
-  const round2 = (num) => Math.round(num * 100 + Number.EPSILON) / 100; //123.2345 => 123.23
-  cart.itemsPrice = round2(
-    cart.cartItems.reduce((a, c) => a + c.quantity * c.price, 0)
+export default function PlaceOrderScreen(props) {
+  const cart = useSelector((state) => state.cart);
+  if (!cart.paymentMethod) {
+    props.history.push('/payment');
+  }
+  const orderCreate = useSelector((state) => state.orderCreate);
+  const { loading, success, error, order } = orderCreate;
+  const toPrice = (num) => Number(num.toFixed(2)); // 5.123 => "5.12" => 5.12
+  cart.itemsPrice = toPrice(
+    cart.cartItems.reduce((a, c) => a + c.qty * c.price, 0)
   );
-
-  cart.shippingPrice = cart.itemsPrice < 100 ? round2(0) : round2(10);
-  cart.taxPrice = round2(cart.itemsPrice * 0.15);
+  cart.shippingPrice = cart.itemsPrice > 100 ? toPrice(0) : toPrice(10);
+  cart.taxPrice = toPrice(0.15 * cart.itemsPrice);
   cart.totalPrice = cart.itemsPrice + cart.shippingPrice + cart.taxPrice;
-
-  const placeOrderHandler = async () => {};
-
+  const dispatch = useDispatch();
+  const placeOrderHandler = () => {
+    dispatch(createOrder({ ...cart, orderItems: cart.cartItems }));
+  };
   useEffect(() => {
-    if (!cart.paymentMethod) {
-      navigate('/payment');
+    if (success) {
+      props.history.push(`/order/${order._id}`);
+      dispatch({ type: ORDER_CREATE_RESET });
     }
-  }, [cart, navigate]);
+  }, [dispatch, order, props.history, success]);
   return (
     <div>
-      <Container className="small-container">
-        <CheckoutSteps step1 step2 step3 step4 />
-      </Container>
-      <Helmet>
-        <title>Place Order</title>
-      </Helmet>
-      <h1 className="my-3">Preview Order</h1>
-      <Row>
-        <Col md={8}>
-          <Card className="mb-3">
-            <Card.Body>
-              <Card.Title>Shipping</Card.Title>
-              <Card.Text>
-                <strong>Name:</strong>
-                {cart.shippingAddress.fullName}
-                <br />
-                <strong>Address:</strong>
-                {cart.shippingAddress.address}, {cart.shippingAddress.city},{' '}
-                {cart.shippingAddress.postalCode} {cart.shippingAddress.country}
-              </Card.Text>
-              <Link to="/shipping">Edit</Link>
-            </Card.Body>
-          </Card>
-          <Card className="mb-3">
-            <Card.Body>
-              <Card.Title>Payment Method</Card.Title>
-              <Card.Text>
-                <strong>Method:</strong>
-                {cart.paymentMethod}
-              </Card.Text>
-              <Link to="/payment">Edit</Link>
-            </Card.Body>
-          </Card>
+      <CheckoutSteps step1 step2 step3 step4></CheckoutSteps>
+      <div className="row top">
+        <div className="col-2">
+          <ul>
+            <li>
+              <div className="card card-body">
+                <h2>Shipping</h2>
+                <p>
+                  <strong>Name:</strong> {cart.shippingAddress.fullName} <br />
+                  <strong>Address: </strong> {cart.shippingAddress.address},
+                  {cart.shippingAddress.city}, {cart.shippingAddress.postalCode}
+                  ,{cart.shippingAddress.country}
+                </p>
+              </div>
+            </li>
+            <li>
+              <div className="card card-body">
+                <h2>Payment</h2>
+                <p>
+                  <strong>Method:</strong> {cart.paymentMethod}
+                </p>
+              </div>
+            </li>
+            <li>
+              <div className="card card-body">
+                <h2>Order Items</h2>
+                <ul>
+                  {cart.cartItems.map((item) => (
+                    <li key={item.product}>
+                      <div className="row">
+                        <div>
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="small"
+                          ></img>
+                        </div>
+                        <div className="min-30">
+                          <Link to={`/product/${item.product}`}>
+                            {item.name}
+                          </Link>
+                        </div>
 
-          <Card className="mb-3">
-            <Card.Body>
-              <Card.Title>Items</Card.Title>
-              <ListGroup variant="flush">
-                {cart.cartItems.map((item) => (
-                  <ListGroup.Item key={item._id}>
-                    <Row className="align-items-center">
-                      <Col md={6}>
-                        <Image
-                          src={item.image}
-                          alt={item.name}
-                          className="img-fluid rounded img-thumbnail"
-                        />{' '}
-                        <Link to={`/product/${item.slug}`}>{item.name}</Link>
-                      </Col>
-                      <Col md={3}>
-                        <span>{item.quantity}</span>
-                      </Col>
-                      <Col md={3}>
-                        <span>
-                          {'$'}
-                          {item.price}
-                        </span>
-                      </Col>
-                    </Row>
-                  </ListGroup.Item>
-                ))}
-              </ListGroup>
-              <Link to="/cart">Edit</Link>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={4}>
-          <Card>
-            <Card.Body>
-              <Card.Title>Order Summary</Card.Title>
-              <ListGroup variant="flush">
-                <ListGroup.Item>
-                  <Row>
-                    <Col>Items</Col>
-                    <Col>
-                      {'$'}
-                      {cart.itemsPrice.toFixed(2)}
-                    </Col>
-                  </Row>
-                </ListGroup.Item>
-                <ListGroup.Item>
-                  <Row>
-                    <Col>Shipping</Col>
-                    <Col>
-                      {'$'}
-                      {cart.shippingPrice.toFixed(2)}
-                    </Col>
-                  </Row>
-                </ListGroup.Item>
-                <ListGroup.Item>
-                  <Row>
-                    <Col>Tax</Col>
-                    <Col>
-                      {'$'}
-                      {cart.taxPrice.toFixed(2)}
-                    </Col>
-                  </Row>
-                </ListGroup.Item>
-                <ListGroup.Item>
-                  <Row>
-                    <Col>Order Total</Col>
-                    <Col>
-                      {'$'}
-                      {cart.totalPrice.toFixed(2)}
-                    </Col>
-                  </Row>
-                </ListGroup.Item>
-                <ListGroup.Item>
-                  <div className="d-grid">
-                    <Button
-                      type="button"
-                      onClick={placeOrderHandler}
-                      disabled={cart.cartItems.length === 0}
-                    >
-                      Place Order
-                    </Button>
+                        <div>
+                          {item.qty} x ${item.price} = ${item.qty * item.price}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <div className="col-1">
+          <div className="card card-body">
+            <ul>
+              <li>
+                <h2>Order Summary</h2>
+              </li>
+              <li>
+                <div className="row">
+                  <div>Items</div>
+                  <div>${cart.itemsPrice.toFixed(2)}</div>
+                </div>
+              </li>
+              <li>
+                <div className="row">
+                  <div>Shipping</div>
+                  <div>${cart.shippingPrice.toFixed(2)}</div>
+                </div>
+              </li>
+              <li>
+                <div className="row">
+                  <div>Tax</div>
+                  <div>${cart.taxPrice.toFixed(2)}</div>
+                </div>
+              </li>
+              <li>
+                <div className="row">
+                  <div>
+                    <strong> Order Total</strong>
                   </div>
-                </ListGroup.Item>
-              </ListGroup>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+                  <div>
+                    <strong>${cart.totalPrice.toFixed(2)}</strong>
+                  </div>
+                </div>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={placeOrderHandler}
+                  className="primary block"
+                  disabled={cart.cartItems.length === 0}
+                >
+                  Place Order
+                </button>
+              </li>
+              {loading && <LoadingBox></LoadingBox>}
+              {error && <MessageBox variant="danger">{error}</MessageBox>}
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   );
-};
-
-export default PlaceOrderScreen;
+}

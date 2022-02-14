@@ -1,135 +1,107 @@
-import React, { useContext } from 'react';
-import { Button, Card, Col, Image, ListGroup, Row } from 'react-bootstrap';
-import axios from 'axios';
-import { Helmet } from 'react-helmet-async';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
+import { addToCart, removeFromCart } from '../actions/cartActions';
 import MessageBox from '../components/MessageBox';
-import { Store } from '../Store';
 
-const CartScreen = () => {
-  const navigate = useNavigate()
-  const { state, dispatch: ctxDispatch } = useContext(Store);
-  const {
-    cart: { cartItems },
-  } = state;
-
-  const updateCartHandler = async (item, quantity) => {
-    const { data } = await axios.get(`/api/products/${item._id}`);
-    if (data.countInStock < quantity) {
-      window.alert('Sorry Product is out of stock');
-      return;
+export default function CartScreen(props) {
+  const productId = props.match.params.id;
+  const qty = props.location.search
+    ? Number(props.location.search.split('=')[1])
+    : 1;
+  const cart = useSelector((state) => state.cart);
+  const { cartItems } = cart;
+  const dispatch = useDispatch();
+  useEffect(() => {
+    if (productId) {
+      dispatch(addToCart(productId, qty));
     }
-    ctxDispatch({
-      type: 'CART_ADD_ITEM',
-      payload: { ...item, quantity },
-    });
-  };
+  }, [dispatch, productId, qty]);
 
-  const removeItemHandler = (item) => {
-    ctxDispatch({
-      type: 'CART_REMOVE_ITEM',
-      payload: item,
-    });
+  const removeFromCartHandler = (id) => {
+    // delete action
+    dispatch(removeFromCart(id));
   };
 
   const checkoutHandler = () => {
-    navigate('/signin?redirect=/shipping');
+    props.history.push('/signin?redirect=shipping');
   };
-
   return (
-    <div>
-      <Helmet>
-        <title>Shopping Cart</title>
-      </Helmet>
-      <h1>Shopping Cart</h1>
-      <Row>
-        <Col md={8}>
-          {cartItems.length === 0 ? (
-            <MessageBox>
-              Cart is empty. <Link to="/">Go Shopping</Link>
-            </MessageBox>
-          ) : (
-            <ListGroup>
-              {cartItems.map((item) => (
-                <ListGroup.Item key={item._id}>
-                  <Row className="align-items-center">
-                    <Col md={4}>
-                      <Image
-                        src={item.image}
-                        fluid
-                        rounded
-                        className="img-thumbnail"
-                      />{' '}
-                      <Link to={`/product/${item.slug}`}>{item.name}</Link>
-                    </Col>
-                    <Col md={3}>
-                      <Button
-                        variant="light"
-                        onClick={() =>
-                          updateCartHandler(item, item.quantity - 1)
-                        }
-                        disabled={item.quantity === 1}
-                      >
-                        <i className="fas fa-minus-circle"></i>
-                      </Button>{' '}
-                      <span>{item.quantity}</span>{' '}
-                      <Button
-                        variant="light"
-                        onClick={() =>
-                          updateCartHandler(item, item.quantity + 1)
-                        }
-                        disabled={item.quantity === item.countInStock}
-                      >
-                        <i className="fas fa-plus-circle"></i>
-                      </Button>
-                    </Col>
-                    <Col md={3}>
-                      <strong>
-                        {'$'}
-                        {item.price}
-                      </strong>
-                    </Col>
-                    <Col md={2}>
-                      <Button variant="light" onClick={()=>removeItemHandler(item)}>
-                        <i className="fas fa-trash"></i>
-                      </Button>
-                    </Col>
-                  </Row>
-                </ListGroup.Item>
-              ))}
-            </ListGroup>
-          )}
-        </Col>
-        <Col md={4}>
-          <Card>
-            <Card.Body>
-              <ListGroup variant="flush">
-                <ListGroup.Item>
-                  <h3>
-                    Subtotal ({cartItems.reduce((a, c) => a + c.quantity, 0)}{' '}
-                    items) : {'$'}
-                    {cartItems.reduce((a, c) => a + c.price * c.quantity, 0)}
-                  </h3>
-                </ListGroup.Item>
-                <ListGroup.Item>
-                  <div className="d-grid">
-                    <Button
-                      type="button"
-                      variant="primary"
-                      onClick={()=>checkoutHandler()}
-                      disabled={cartItems.length === 0}
-                    >
-                      Proceed to checkout
-                    </Button>
+    <div className="row top">
+      <div className="col-2">
+        <h1>Shopping Cart</h1>
+        {cartItems.length === 0 ? (
+          <MessageBox>
+            Cart is empty. <Link to="/">Go Shopping</Link>
+          </MessageBox>
+        ) : (
+          <ul>
+            {cartItems.map((item) => (
+              <li key={item.product}>
+                <div className="row">
+                  <div>
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="small"
+                    ></img>
                   </div>
-                </ListGroup.Item>
-              </ListGroup>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
+                  <div className="min-30">
+                    <Link to={`/product/${item.product}`}>{item.name}</Link>
+                  </div>
+                  <div>
+                    <select
+                      value={item.qty}
+                      onChange={(e) =>
+                        dispatch(
+                          addToCart(item.product, Number(e.target.value))
+                        )
+                      }
+                    >
+                      {[...Array(item.countInStock).keys()].map((x) => (
+                        <option key={x + 1} value={x + 1}>
+                          {x + 1}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>${item.price}</div>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => removeFromCartHandler(item.product)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <div className="col-1">
+        <div className="card card-body">
+          <ul>
+            <li>
+              <h2>
+                Subtotal ({cartItems.reduce((a, c) => a + c.qty, 0)} items) : $
+                {cartItems.reduce((a, c) => a + c.price * c.qty, 0)}
+              </h2>
+            </li>
+            <li>
+              <button
+                type="button"
+                onClick={checkoutHandler}
+                className="primary block"
+                disabled={cartItems.length === 0}
+              >
+                Proceed to Checkout
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
   );
-};
-
-export default CartScreen;
+}

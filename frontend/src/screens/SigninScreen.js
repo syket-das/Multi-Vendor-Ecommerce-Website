@@ -1,80 +1,75 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { Button, Container, Form } from 'react-bootstrap';
-import {toast} from 'react-toastify';
-import { Helmet } from 'react-helmet-async';
-import axios from 'axios';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Store } from '../Store';
-import { getError } from '../utils';
-const SigninScreen = () => {
-  const navigate = useNavigate();
-  const { search } = useLocation();
-  const redirectInUrl = new URLSearchParams(search).get('redirect');
-  const redirect = redirectInUrl ? redirectInUrl : '/';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
+import { signin } from '../actions/userActions';
+import LoadingBox from '../components/LoadingBox';
+import MessageBox from '../components/MessageBox';
+
+export default function SigninScreen(props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const { state, dispatch: ctxDispatch } = useContext(Store);
+  const redirect = props.location.search
+    ? props.location.search.split('=')[1]
+    : '/';
 
-  const submitHandler = async (e) => {
+  const userSignin = useSelector((state) => state.userSignin);
+  const { userInfo, loading, error } = userSignin;
+
+  const dispatch = useDispatch();
+  const submitHandler = (e) => {
     e.preventDefault();
-    try {
-      const { data } = await axios.post('/api/users/signin', {
-        email,
-        password,
-      });
-      ctxDispatch({ type: 'USER_SIGNIN', payload: data });
-      localStorage.setItem('userInfo', JSON.stringify(data));
-      navigate(redirect || '/');
-    } catch (error) {
-      toast.error(getError(error));
-    }
+    dispatch(signin(email, password));
   };
-
   useEffect(() => {
-    if (state.userInfo) {
-      navigate(redirect || '/');
+    if (userInfo) {
+      props.history.push(redirect);
     }
-  }, [state.userInfo, navigate, redirect]);
+  }, [props.history, redirect, userInfo]);
   return (
-    <Container className="small-container">
-      <Helmet>
-        <title>Sign in</title>
-      </Helmet>
-      <h1 className="my-3">Sign In</h1>
-      <Form onSubmit={submitHandler}>
-        <Form.Group className="mb-3" controlId="email">
-          <Form.Label>Email address</Form.Label>
-          <Form.Control
+    <div>
+      <form className="form" onSubmit={submitHandler}>
+        <div>
+          <h1>Sign In</h1>
+        </div>
+        {loading && <LoadingBox></LoadingBox>}
+        {error && <MessageBox variant="danger">{error}</MessageBox>}
+        <div>
+          <label htmlFor="email">Email address</label>
+          <input
             type="email"
+            id="email"
             placeholder="Enter email"
+            required
             onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </Form.Group>
-
-        <Form.Group className="mb-3" controlId="password">
-          <Form.Label>Password</Form.Label>
-          <Form.Control
+          ></input>
+        </div>
+        <div>
+          <label htmlFor="password">Password</label>
+          <input
             type="password"
-            placeholder="Password"
-            onChange={(e) => setPassword(e.target.value)}
+            id="password"
+            placeholder="Enter password"
             required
-          />
-        </Form.Group>
-
-        <div className="mb-3">
-          <Button variant="primary" type="submit">
+            onChange={(e) => setPassword(e.target.value)}
+          ></input>
+        </div>
+        <div>
+          <label />
+          <button className="primary" type="submit">
             Sign In
-          </Button>
+          </button>
         </div>
-
-        <div className="mb-3">
-          New to us? <Link to={`/signup?redirect=${redirect}`}>Sign Up</Link>
+        <div>
+          <label />
+          <div>
+            New customer?{' '}
+            <Link to={`/register?redirect=${redirect}`}>
+              Create your account
+            </Link>
+          </div>
         </div>
-      </Form>
-    </Container>
+      </form>
+    </div>
   );
-};
-
-export default SigninScreen;
+}

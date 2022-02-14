@@ -1,15 +1,12 @@
 import React from 'react';
-import { Col, Row } from 'react-bootstrap';
 
-const CheckoutSteps = (props) => {
+export default function CheckoutSteps(props) {
   return (
-    <Row className="checkout-steps">
-      <Col className={props.step1 ? 'active' : ''}>Signin</Col>
-      <Col className={props.step2 ? 'active' : ''}>Shipping</Col>
-      <Col className={props.step3 ? 'active' : ''}>Payment</Col>
-      <Col className={props.step4 ? 'active' : ''}>Place Order</Col>
-    </Row>
+    <div className="row checkout-steps">
+      <div className={props.step1 ? 'active' : ''}>Sign-In</div>
+      <div className={props.step2 ? 'active' : ''}>Shipping</div>
+      <div className={props.step3 ? 'active' : ''}>Payment</div>
+      <div className={props.step4 ? 'active' : ''}>Place Order</div>
+    </div>
   );
-};
-
-export default CheckoutSteps;
+}

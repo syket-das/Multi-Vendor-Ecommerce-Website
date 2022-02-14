@@ -1,93 +1,121 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { LinkContainer } from 'react-router-bootstrap';
-import { Badge, Container, Nav, Navbar, NavDropdown } from 'react-bootstrap';
-import HomeScreen from './screens/HomeScreen';
-import ProductScreen from './screens/ProductScreen';
-import { useContext } from 'react';
-import { Store } from './Store';
+import React from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { BrowserRouter, Link, Route } from 'react-router-dom';
+import { signout } from './actions/userActions';
+import AdminRoute from './components/AdminRoute';
+import PrivateRoute from './components/PrivateRoute';
 import CartScreen from './screens/CartScreen';
-import SigninScreen from './screens/SigninScreen';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import ShippingAddressScreen from './screens/ShippingAddressScreen';
-import SignupScreen from './screens/SignupScreen';
+import HomeScreen from './screens/HomeScreen';
+import OrderHistoryScreen from './screens/OrderHistoryScreen';
+import OrderListScreen from './screens/OrderListScreen';
+import OrderScreen from './screens/OrderScreen';
 import PaymentMethodScreen from './screens/PaymentMethodScreen';
 import PlaceOrderScreen from './screens/PlaceOrderScreen';
+import ProductEditScreen from './screens/ProductEditScreen';
+import ProductListScreen from './screens/ProductListScreen';
+import ProductScreen from './screens/ProductScreen';
+import ProfileScreen from './screens/ProfileScreen';
+import RegisterScreen from './screens/RegisterScreen';
+import ShippingAddressScreen from './screens/ShippingAddressScreen';
+import SigninScreen from './screens/SigninScreen';
 
 function App() {
-  const { state, dispatch: ctxDispatch } = useContext(Store);
-  const { cart, userInfo } = state;
-
-  const signOutHandler = () => {
-    ctxDispatch({ type: 'USER_SIGNOUT' });
-    localStorage.removeItem('userInfo');
-    localStorage.removeItem('shippingAddress');
-    localStorage.removeItem('paymentMethod');
+  const cart = useSelector((state) => state.cart);
+  const { cartItems } = cart;
+  const userSignin = useSelector((state) => state.userSignin);
+  const { userInfo } = userSignin;
+  const dispatch = useDispatch();
+  const signoutHandler = () => {
+    dispatch(signout());
   };
   return (
     <BrowserRouter>
-      <div className="d-flex flex-column site-container">
-        <ToastContainer position="top-center" limit={1} />
-        <header>
-          <Navbar bg="dark" variant="dark">
-            <Container>
-              <LinkContainer to="/">
-                <Navbar.Brand>Amazon</Navbar.Brand>
-              </LinkContainer>
-              <Nav className="ms-auto">
-                <LinkContainer to="/cart">
-                  <Nav.Link>
-                    Cart
-                    {cart.cartItems.length > 0 && (
-                      <Badge pill bg="danger">
-                        {cart.cartItems.reduce((a, c) => a + c.quantity, 0)}
-                      </Badge>
-                    )}
-                  </Nav.Link>
-                </LinkContainer>
-                {userInfo ? (
-                  <NavDropdown title={userInfo.name} id="basic-nav-dropdown">
-                    <LinkContainer to="/profile">
-                      <NavDropdown.Item>Profile</NavDropdown.Item>
-                    </LinkContainer>
-                    <LinkContainer to="/orderhistory">
-                      <NavDropdown.Item>Order History</NavDropdown.Item>
-                    </LinkContainer>
-                    <NavDropdown.Divider />
-                    <NavDropdown.Item
-                      onClick={() => {
-                        signOutHandler();
-                      }}
-                    >
+      <div className="grid-container">
+        <header className="row">
+          <div>
+            <Link className="brand" to="/">
+              amazon
+            </Link>
+          </div>
+          <div>
+            <Link to="/cart">
+              Cart
+              {cartItems.length > 0 && (
+                <span className="badge">{cartItems.length}</span>
+              )}
+            </Link>
+            {userInfo ? (
+              <div className="dropdown">
+                <Link to="#">
+                  {userInfo.name} <i className="fa fa-caret-down"></i>{' '}
+                </Link>
+                <ul className="dropdown-content">
+                  <li>
+                    <Link to="/profile">User Profile</Link>
+                  </li>
+                  <li>
+                    <Link to="/orderhistory">Order History</Link>
+                  </li>
+                  <li>
+                    <Link to="#signout" onClick={signoutHandler}>
                       Sign Out
-                    </NavDropdown.Item>
-                  </NavDropdown>
-                ) : (
-                  <LinkContainer to="/signin">
-                    <Nav.Link>Sign In</Nav.Link>
-                  </LinkContainer>
-                )}
-              </Nav>
-            </Container>
-          </Navbar>
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+            ) : (
+              <Link to="/signin">Sign In</Link>
+            )}
+            {userInfo && userInfo.isAdmin && (
+              <div className="dropdown">
+                <Link to="#admin">
+                  Admin <i className="fa fa-caret-down"></i>
+                </Link>
+                <ul className="dropdown-content">
+                  <li>
+                    <Link to="/dashboard">Dashboard</Link>
+                  </li>
+                  <li>
+                    <Link to="/productlist">Products</Link>
+                  </li>
+                  <li>
+                    <Link to="/orderlist">Orders</Link>
+                  </li>
+                  <li>
+                    <Link to="/userlist">Users</Link>
+                  </li>
+                </ul>
+              </div>
+            )}
+          </div>
         </header>
         <main>
-          <Container className="my-3">
-            <Routes>
-              <Route path="/product/:slug" element={<ProductScreen />} />
-              <Route path="/cart" element={<CartScreen />} />
-              <Route path="/signin" element={<SigninScreen />} />
-              <Route path="/signup" element={<SignupScreen />} />
-              <Route path="/placeorder" element={<PlaceOrderScreen />} />
-              <Route path="/shipping" element={<ShippingAddressScreen />} />
-              <Route path="/payment" element={<PaymentMethodScreen />} />
-              <Route path="/" element={<HomeScreen />} />
-            </Routes>
-          </Container>
+          <Route path="/cart/:id?" component={CartScreen}></Route>
+          <Route path="/product/:id" component={ProductScreen} exact ></Route>
+          <Route path="/product/:id/edit" component={ProductEditScreen} exact ></Route>
+          <Route path="/signin" component={SigninScreen}></Route>
+          <Route path="/register" component={RegisterScreen}></Route>
+          <Route path="/shipping" component={ShippingAddressScreen}></Route>
+          <Route path="/payment" component={PaymentMethodScreen}></Route>
+          <Route path="/placeorder" component={PlaceOrderScreen}></Route>
+          <Route path="/order/:id" component={OrderScreen}></Route>
+          <Route path="/orderhistory" component={OrderHistoryScreen}></Route>
+          <PrivateRoute
+            path="/profile"
+            component={ProfileScreen}
+          ></PrivateRoute>
+          <AdminRoute
+            path="/productlist"
+            component={ProductListScreen}
+          ></AdminRoute>
+          <AdminRoute
+            path="/orderlist"
+            component={OrderListScreen}
+          ></AdminRoute>
+
+          <Route path="/" component={HomeScreen} exact></Route>
         </main>
-        <footer>
-          <div className="text-center">All rights reserved</div>
-        </footer>
+        <footer className="row center">All right reserved</footer>
       </div>
     </BrowserRouter>
   );
