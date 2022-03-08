@@ -1,0 +1,4 @@
+JWT_SECRET = secret123
+PAYPAL_CLIENT_ID_OLD = AXNYMtKeR45s1Oy-CJsP7G43FrF7jdFRJFXjJO_3MAjIVARvJoHfIk_qesBKMKWmycS24a15lGYY7L4P
+PAYPAL_CLIENT_ID = AZYU4owN9xhO-ASCgbsQGm07hwg07VvP0O82clgtf7T_U58RIHosWgC6c-UsNNlryUH_dREU1pEbLOJj
+//MONGODB_URL = mongodb+srv://syket:224722@cluster0.f7dyv.mongodb.net/myAmazonX?retryWrites=true&w=majority
